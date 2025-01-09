@@ -1,0 +1,5 @@
+CompileFlags:
+  Add: [
+    "-std=c++17",
+  ]
+  CompilationDatabase: build/       # Search build/ directory for compile_commands.json
