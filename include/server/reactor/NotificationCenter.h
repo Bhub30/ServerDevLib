@@ -4,9 +4,11 @@
 #include "Dispatcher.h"
 #include "Channel.h"
 #include "server/threadpool/ThreadPool.h"
+#include <atomic>
 #include <future>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -93,12 +95,23 @@ public:
             std::future<R> res = _pool.EnqueueTask(std::forward<Fn>(fn), channel->GetHandle(), channel->GetReceivedData(), std::forward<Args>(args)...);
             result.emplace_back(std::move(res));
             // have been finished the operation for dealing with data
-            std::lock_guard<std::mutex> lk(_mx);
+            // std::lock_guard<std::mutex> lk(_mx);
+            // lock-free, avoiding compietition
+            int tries = 0;
+            while ( !_barrier.exchange(true, std::memory_order_acq_rel) )
+            {
+                ++tries;
+                if ( tries >= 3 )
+                    std::this_thread::yield();
+                tries = 0;
+            }
             auto at = _waitToHandleFD.find(it.first);
             if ( at->second == MOREPLUS )
                 at->second = MORE;
             else if ( at->second == MORE )
                 at->second = ONE;
+
+            while ( !_barrier.exchange(false, std::memory_order_acq_rel) ) ;
         }
         return result;
     }
@@ -109,6 +122,7 @@ private:
     Dispatcher::ChannelMap & _channelMap;
     std::unordered_map<int, state> _waitToHandleFD;;
     server::threadpool::ThreadPool & _pool;
+    std::atomic_bool _barrier;
 };
 
 } // namespace reactor
