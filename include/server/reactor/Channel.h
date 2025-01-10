@@ -5,11 +5,13 @@
 #include <cstddef>
 #include <functional>
 #include <mutex>
+#include <netinet/in.h>
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
 #include "Demultiplexer.h"
 #include "Handler.h"
+#include "server/reactor/AcceptHandler.h"
 
 namespace server {
 namespace reactor {
@@ -65,6 +67,10 @@ public:
             } while ( ( got = ::read(_fd, _receivedBuf.data() + _receivedCount, validSize) ) > 0 );
             if ( _globalReceivedCb )
                 _globalReceivedCb(_receivedCount, errno, _receivedBuf.substr(0, _receivedCount));
+            char ip_str[INET_ADDRSTRLEN];
+            uint16_t port = 0;
+            AcceptHandler::GetPeerHostInfo(ip_str, INET_ADDRSTRLEN, _fd, port);
+            LOG(INFO) << "Has been read data { FD = " << _fd << ", IP = " << ip_str << ", PORT = " << port << ", DATA: " << _receivedBuf << " }";
         }
         if ( got == 0 )
         {
@@ -92,6 +98,10 @@ public:
             return;
         }
         auto sent = ::write(_fd, _sendingBuf.data(), size);
+        char ip_str[INET_ADDRSTRLEN];
+        uint16_t port = 0;
+        AcceptHandler::GetPeerHostInfo(ip_str, INET_ADDRSTRLEN, _fd, port);
+        LOG(INFO) << "Has been read data { FD = " << _fd << ", IP = " << ip_str << ", PORT = " << port << ", Buffering Data: " << _sendingBuf << ", Sent DATA: " << _sendingBuf.substr(0, sent) << " }";
         if ( sent > 0 && _globalSentCb )
             _globalSentCb(sent, errno, _sendingBuf.substr(0, sent));
         if ( sent > 0 ) {

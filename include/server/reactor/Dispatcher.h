@@ -157,6 +157,7 @@ public:
     {
         if ( fd < 0 ) return;
         _masterfd = fd;
+        LOG(INFO) << "Setup master fd " << fd;
         RegisterHandler(fd, std::make_shared<AcceptHandler>(fd));
     }
 
@@ -213,7 +214,7 @@ private:
             char ip_str[INET_ADDRSTRLEN];
             uint16_t port = 0;
             AcceptHandler::GetPeerHostInfo(ip_str, INET_ADDRSTRLEN, fd, port);
-            LOG_IF(INFO, port != 0) << "Close accepted connection: [ FD = " << fd << ", IP = " << ip_str << ", PORT = " << port << " ].";
+            LOG(INFO) << "Close accepted connection: { FD = " << fd << " }";
 
             std::lock_guard<std::mutex> lk(_globalMx);
             auto it = _allChannel.find(fd);

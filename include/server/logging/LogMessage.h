@@ -124,9 +124,9 @@ private:
                 << tm.tm_min << ':' << std::setw(2)
                 << tm.tm_sec << '.' << std::setw(3)
                 << static_cast<int>(milliseconds.count())
-                << MiddleSeparator<< std::setw(-20) << std::setfill(' ')
+                << MiddleSeparator<< std::setw(20) << std::setfill(' ')
                 << _filename << ':' << std::setw(15)
-                << _func << ':' << _line
+                << _func << ':' << std::setw(5) << _line
                 << RightSeparator << BoundSeparator;
     }
 

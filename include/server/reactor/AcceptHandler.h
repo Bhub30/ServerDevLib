@@ -44,7 +44,7 @@ public:
             char ip_str[INET_ADDRSTRLEN];
             uint16_t port = 0;
             GetPeerHostInfo(ip_str, INET_ADDRSTRLEN, _accepted, port);
-            LOG(INFO) << "Accecpting new connection: [ FD = " << _accepted << ", IP = " << ip_str << ", PORT = " << port << " ].";
+            LOG(INFO) << "Accecpting new connection: { FD = " << _accepted << ", IP = " << ip_str << ", PORT = " << port << " }.";
 
             int flags = fcntl(_accepted, F_GETFL, 0);
             fcntl(_accepted, F_SETFL, flags | O_NONBLOCK);
@@ -60,7 +60,7 @@ public:
             LOG(ERROR) << "Failed to get peer ip address and port.";
             return;
         }
-        inet_ntop(AF_INET, &peer_addr.sin_addr, buf, n);
+        inet_ntop(AF_INET, &peer_addr.sin_addr, buf, peer_addr_len);
         port = ntohs(peer_addr.sin_port);
     }
 
