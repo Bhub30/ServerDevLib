@@ -98,14 +98,26 @@ public:
     {
         if ( !_access )
             return;
-        _access = true;
+        _access = false;
         ::close(_fd);
-        std::for_each(_allAccepted.begin(), _allAccepted.end(), [] (auto & fd) { ::close(fd); });
-        std::set<int> s{};
-        _allAccepted.swap(s);
+        if ( _saveAllConnection )
+            std::for_each(_allAccepted.begin(), _allAccepted.end(), [] (auto & fd) { ::close(fd); });
+        _allAccepted.clear();
     }
 
     void AutoSaveAcceptedFD(bool b = true) { _saveAllConnection = b; }
+
+    bool CloseCilent(int fd)
+    {
+        auto it = _allAccepted.find(fd);
+        if ( it == _allAccepted.end() )
+            return false;
+        ::close(*it);
+        _allAccepted.erase(it);
+        return true;
+    }
+
+    std::set<int> & GetAllClient() { return _allAccepted; }
 
 private:
     int _fd;
