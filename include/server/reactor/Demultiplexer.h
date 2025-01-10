@@ -14,7 +14,7 @@ namespace reactor {
 
 class Demultiplexer {
 public:
-    inline static uint32_t DEFAULT_EVENTS = EPOLLIN | EPOLLHUP | EPOLLERR;
+    inline static uint32_t DEFAULT_EVENTS = EPOLLET | EPOLLIN | EPOLLHUP | EPOLLERR;
 
 public:
     typedef std::vector<struct epoll_event> EventsVec;
