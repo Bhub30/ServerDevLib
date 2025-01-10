@@ -49,11 +49,20 @@ public:
             _waitToHandleFD.emplace(fd, MORE);
             return;
         }
-        std::lock_guard<std::mutex> lk(_mx);
+        // std::lock_guard<std::mutex> lk(_mx);
+        int tries = 0;
+        while ( !_barrier.exchange(true, std::memory_order_acq_rel) )
+        {
+            ++tries;
+            if ( tries >= 3 )
+                std::this_thread::yield();
+            tries = 0;
+        }
         if ( it->second == MORE )
             it->second = MOREPLUS;
         else if ( it->second == ONE )
             it->second = MORE;
+        while ( !_barrier.exchange(false, std::memory_order_acq_rel) ) ;
     }
 
     void NotifyClose(int fd)
@@ -63,7 +72,7 @@ public:
             _waitToHandleFD.erase(fd);
     }
 
-    void NotifyResponseReady(int fd, std::string data)
+    void NotifyResponseReady(int fd, std::string const & data)
     {
         auto channel = _dispatcher.GetChannel(fd);
         if ( channel == nullptr )
@@ -86,12 +95,14 @@ public:
         }
 
         std::vector<std::future<R>> result;
+        bool no_more = true;
         result.reserve(copy.size());
         for ( auto & it : copy ) {
             auto channel = _dispatcher.GetChannel(it.first);
             if ( channel == nullptr || it.second == ONE )
                 continue;
 
+            no_more = false;
             std::future<R> res = _pool.EnqueueTask(std::forward<Fn>(fn), channel->GetHandle(), channel->GetReceivedData(), std::forward<Args>(args)...);
             result.emplace_back(std::move(res));
             // have been finished the operation for dealing with data
@@ -113,6 +124,9 @@ public:
 
             while ( !_barrier.exchange(false, std::memory_order_acq_rel) ) ;
         }
+        if ( no_more )
+            std::this_thread::yield();
+
         return result;
     }
 
