@@ -1,10 +1,10 @@
+#include "server/logging/Logging.h"
 #include "server/reactor/Channel.h"
 #include "server/reactor/Dispatcher.h"
 #include "server/reactor/Demultiplexer.h"
 #include "server/reactor/NotificationCenter.h"
 #include "server/threadpool/ThreadPool.h"
 #include "server/TcpServer.h"
-#include <functional>
 #include <iostream>
 #include <string>
 #include <sys/epoll.h>
@@ -46,6 +46,8 @@ Request GetRequest(int fd, std::string data)
 }
 
 int main (int argc, char *argv[]) {
+
+    server::log::InitializeLogger();
 
     server::threadpool::GlobalThreadPoolConfig = {3};
 

@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include "Demultiplexer.h"
 #include "Handler.h"
+#include "server/logging/Logging.h"
 #include "server/reactor/AcceptHandler.h"
 
 namespace server {
@@ -70,7 +71,7 @@ public:
             char ip_str[INET_ADDRSTRLEN];
             uint16_t port = 0;
             AcceptHandler::GetPeerHostInfo(ip_str, INET_ADDRSTRLEN, _fd, port);
-            LOG(INFO) << "Has been read data { FD = " << _fd << ", IP = " << ip_str << ", PORT = " << port << ", DATA: " << _receivedBuf << " }";
+            LOG(INFO) << "Has been read data { FD = " << _fd << ", IP = " << ip_str << ", PORT = " << port << ", Total Size For Received Data: " << _receivedCount << ", Bufferring Data: " << _receivedBuf.substr(0, _receivedCount) << " }";
         }
         if ( got == 0 )
         {
@@ -98,10 +99,12 @@ public:
             return;
         }
         auto sent = ::write(_fd, _sendingBuf.data(), size);
+
         char ip_str[INET_ADDRSTRLEN];
         uint16_t port = 0;
         AcceptHandler::GetPeerHostInfo(ip_str, INET_ADDRSTRLEN, _fd, port);
         LOG(INFO) << "Has been read data { FD = " << _fd << ", IP = " << ip_str << ", PORT = " << port << ", Buffering Data: " << _sendingBuf << ", Sent DATA: " << _sendingBuf.substr(0, sent) << " }";
+
         if ( sent > 0 && _globalSentCb )
             _globalSentCb(sent, errno, _sendingBuf.substr(0, sent));
         if ( sent > 0 ) {
