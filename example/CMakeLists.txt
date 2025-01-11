@@ -20,9 +20,3 @@ add_executable(
   LogExample
   "LoggerExample.cpp"
 )
-
-link_directories(${CMAKE_BINARY_DIR})
-target_link_libraries(TcpServerExample  PRIVATE server)
-target_link_libraries(ReactorExample PRIVATE server)
-target_link_libraries(ThreadPoolExample PRIVATE server threadpool)
-target_link_libraries(LogExample PRIVATE logging)
