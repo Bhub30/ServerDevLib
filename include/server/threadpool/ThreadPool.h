@@ -123,7 +123,7 @@ public:
     std::future<R> EnqueueTask(Fn && fn, Args &&... args)
     {
         auto func = std::bind(std::forward<Fn>(fn), std::forward<Args>(args)...);
-        auto task = std::make_shared<std::packaged_task<R()>>(func);
+        auto task = std::make_shared<std::packaged_task<R()>>(std::move(func));
         std::future<R> result = task->get_future();
         {
             std::lock_guard<std::mutex> lock(_queueMutex);

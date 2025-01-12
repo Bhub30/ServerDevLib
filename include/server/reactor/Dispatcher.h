@@ -88,7 +88,7 @@ public:
             return false;
         _demultiplexer.RegisterFd(fd);
         std::lock_guard<std::mutex> lk(_globalMx);
-        return _handlers.emplace(fd, handler).second;
+        return _handlers.try_emplace(fd, handler).second;
     }
 
     int RemoveHandler(int fd)
